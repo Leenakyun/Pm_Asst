@@ -13,7 +13,7 @@ ADMIN_ID = os.getenv(
 
 ADMIN_PASSWORD = os.getenv(
     "ADMIN_PASSWORD",
-    "1234"
+    "4864"
 )
 
 
