@@ -184,6 +184,21 @@ def logout():
 # 로그인
 # =========================================================
 
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"] {
+            display: none;
+        }
+
+        [data-testid="stSidebarCollapsedControl"] {
+            display: none;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 def show_login():
     st.title("🔎 프로젝트 가이드 도우미")
     st.caption(
