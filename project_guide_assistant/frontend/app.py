@@ -184,21 +184,6 @@ def logout():
 # 로그인
 # =========================================================
 
-st.markdown(
-    """
-    <style>
-        [data-testid="stSidebar"] {
-            display: none;
-        }
-
-        [data-testid="stSidebarCollapsedControl"] {
-            display: none;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 def show_login():
     st.title("🔎 프로젝트 가이드 도우미")
     st.caption(
@@ -306,6 +291,46 @@ def show_login():
                         "올바르지 않습니다."
                     )
 
+
+# =========================================================
+# 로그인 상태에 따른 사이드바 표시
+# =========================================================
+
+if not st.session_state.get("logged_in", False):
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebar"] {
+                display: none !important;
+            }
+
+            [data-testid="stSidebarCollapsedControl"] {
+                display: none !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    st.markdown(
+        """
+        <style>
+            [data-testid="stSidebar"] {
+                display: block !important;
+            }
+
+            [data-testid="stSidebarCollapsedControl"] {
+                display: block !important;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# =========================================================
+# 로그인 전
+# =========================================================
 
 if not st.session_state["logged_in"]:
     show_login()
