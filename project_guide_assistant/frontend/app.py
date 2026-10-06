@@ -426,7 +426,7 @@ notification_count = get_unread_count(
 # 알림 팝업
 # =========================================================
 
-@st.dialog("🔔 알림", width="large")
+@st.dialog("🔔 알림", width="small")
 def show_notifications():
     notifications = get_notifications(
         notification_recipient_type,
