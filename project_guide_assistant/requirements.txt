@@ -1,0 +1,6 @@
+streamlit
+pymupdf
+python-docx
+scikit-learn
+streamlit-paste-button
+openai
