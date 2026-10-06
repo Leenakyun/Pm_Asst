@@ -91,7 +91,18 @@ for key, value in SESSION_DEFAULTS.items():
 # =========================================================
 
 def restore_login_from_cookie():
-    if st.session_state.get("logged_in"):
+
+    # 로그아웃 직후에는
+    # 남아 있는 쿠키로 자동 로그인하지 않는다.
+    if st.session_state.get(
+        "_logout_block_restore",
+        False
+    ):
+        return
+
+    if st.session_state.get(
+        "logged_in"
+    ):
         return
 
     token = cookie_manager.get(COOKIE_NAME)
@@ -140,10 +151,50 @@ restore_login_from_cookie()
 # =========================================================
 
 def logout():
-    for key, value in SESSION_DEFAULTS.items():
-        st.session_state[key] = value
+
+    # =====================================================
+    # 자동 로그인 복구 차단
+    # =====================================================
+
+    st.session_state[
+        "_logout_block_restore"
+    ] = True
+
+
+    # =====================================================
+    # 로그인 쿠키 삭제
+    # =====================================================
+
+    try:
+
+        cookie_manager.delete(
+            COOKIE_NAME
+        )
+
+    except Exception:
+
+        pass
+
+
+    # =====================================================
+    # 로그인 세션 초기화
+    # =====================================================
+
+    for key, value in (
+        SESSION_DEFAULTS.items()
+    ):
+
+        st.session_state[
+            key
+        ] = value
+
+
+    # =====================================================
+    # 기타 세션 데이터 정리
+    # =====================================================
 
     keys_to_remove = [
+
         "worker_last_question",
         "worker_last_results",
         "worker_last_faq_results",
@@ -153,29 +204,35 @@ def logout():
         "worker_last_search_images",
         "worker_last_vision_result",
         "worker_last_vision_search_text",
+
         "guide_search_pasted_images",
         "guide_search_file_upload",
+
         "pm_pasted_images",
         "pm_inquiry_question",
         "pm_inquiry_file_upload",
         "pm_inquiry_success",
+
         "selected_worker_inquiry_id",
         "selected_admin_inquiry_id",
+
         "new_faq_pasted_images",
         "new_faq_question",
         "new_faq_answer",
         "new_faq_image_upload",
+
         "delete_faq_id",
     ]
 
-    for key in keys_to_remove:
-        if key in st.session_state:
-            del st.session_state[key]
 
-    try:
-        cookie_manager.delete(COOKIE_NAME)
-    except Exception:
-        pass
+    for key in keys_to_remove:
+
+        if key in st.session_state:
+
+            del st.session_state[
+                key
+            ]
+
 
     st.rerun()
 
@@ -224,6 +281,11 @@ def show_login():
                     normalized_email = worker_email.strip().lower()
                     profile = get_or_create_profile(normalized_email)
 
+                    st.session_state.pop(
+                        "_logout_block_restore",
+                        None
+                    )
+
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "worker"
                     st.session_state["worker_id"] = normalized_email
@@ -267,6 +329,12 @@ def show_login():
                     admin_id,
                     admin_password
                 ):
+
+                    st.session_state.pop(
+                        "_logout_block_restore",
+                        None
+                    )
+                    
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "admin"
                     st.session_state["admin_id"] = admin_id.strip()
