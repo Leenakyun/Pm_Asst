@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime
 
 from backend.storage import (
+    DATA_DIR,
     load_jsonl,
     overwrite_jsonl,
     save_binary_file
@@ -15,11 +16,8 @@ from backend.storage import (
 # 경로
 # =========================================================
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 FAQ_DIR = (
-    BASE_DIR
-    / "data"
+    DATA_DIR
     / "faqs"
 )
 

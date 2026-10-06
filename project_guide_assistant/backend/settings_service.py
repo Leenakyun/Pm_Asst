@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from backend.storage import (
+    DATA_DIR,
     load_jsonl,
     overwrite_jsonl
 )
@@ -10,11 +11,8 @@ from backend.storage import (
 # 경로
 # =========================================================
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 SETTINGS_DIR = (
-    BASE_DIR
-    / "data"
+    DATA_DIR
     / "settings"
 )
 

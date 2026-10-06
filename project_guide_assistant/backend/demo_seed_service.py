@@ -3,21 +3,15 @@ from pathlib import Path
 from datetime import datetime
 
 from backend.storage import (
+    DATA_DIR,
     load_jsonl,
     overwrite_jsonl
 )
 
 
 # =========================================================
-# 프로젝트 경로
+# 데이터 경로
 # =========================================================
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-DATA_DIR = (
-    BASE_DIR
-    / "data"
-)
 
 GUIDE_DIR = (
     DATA_DIR

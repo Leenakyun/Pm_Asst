@@ -7,6 +7,7 @@ from dataclasses import asdict
 from backend.models import Inquiry
 from backend.notification_service import create_notification
 from backend.storage import (
+    DATA_DIR,
     append_jsonl,
     load_jsonl,
     overwrite_jsonl,
@@ -14,11 +15,8 @@ from backend.storage import (
 )
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 INQUIRY_DIR = (
-    BASE_DIR
-    / "data"
+    DATA_DIR
     / "pm_inquiries"
 )
 

@@ -12,17 +12,15 @@ from backend.inquiry_service import (
 )
 from backend.notification_service import create_notification
 from backend.storage import (
+    DATA_DIR,
     append_jsonl,
     load_jsonl,
     save_binary_file
 )
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 ANSWER_DIR = (
-    BASE_DIR
-    / "data"
+    DATA_DIR
     / "pm_answers"
 )
 

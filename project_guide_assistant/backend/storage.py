@@ -1,9 +1,21 @@
 import json
+import os
 from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
+
+# 로컬에서는 프로젝트 내부 data/를 사용하고,
+# Railway에서는 APP_DATA_DIR=/app/data 로 지정해 Volume을 사용한다.
+_configured_data_dir = os.getenv("APP_DATA_DIR", "").strip()
+
+if _configured_data_dir:
+    DATA_DIR = Path(_configured_data_dir).expanduser()
+else:
+    DATA_DIR = BASE_DIR / "data"
+
+DATA_DIR = DATA_DIR.resolve()
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def ensure_directory(path: Path):

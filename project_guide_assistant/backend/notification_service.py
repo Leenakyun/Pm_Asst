@@ -2,11 +2,10 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from backend.storage import append_jsonl, load_jsonl, overwrite_jsonl
+from backend.storage import DATA_DIR, append_jsonl, load_jsonl, overwrite_jsonl
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-NOTIFICATION_DIR = BASE_DIR / "data" / "notifications"
+NOTIFICATION_DIR = DATA_DIR / "notifications"
 NOTIFICATION_FILE = NOTIFICATION_DIR / "notifications.jsonl"
 
 

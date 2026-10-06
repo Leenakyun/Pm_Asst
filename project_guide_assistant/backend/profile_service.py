@@ -1,11 +1,10 @@
 from datetime import datetime
 from pathlib import Path
 
-from backend.storage import load_jsonl, overwrite_jsonl
+from backend.storage import DATA_DIR, load_jsonl, overwrite_jsonl
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-PROFILE_DIR = BASE_DIR / "data" / "profiles"
+PROFILE_DIR = DATA_DIR / "profiles"
 PROFILE_FILE = PROFILE_DIR / "profiles.jsonl"
 
 

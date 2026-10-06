@@ -6,6 +6,7 @@ from dataclasses import asdict
 
 from backend.models import GuideVersion
 from backend.storage import (
+    DATA_DIR,
     load_jsonl,
     overwrite_jsonl,
     save_binary_file
@@ -16,11 +17,8 @@ from backend.storage import (
 # 저장 경로
 # =========================================================
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 GUIDE_DIR = (
-    BASE_DIR
-    / "data"
+    DATA_DIR
     / "guides"
 )
 

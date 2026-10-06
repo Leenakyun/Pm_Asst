@@ -6,16 +6,14 @@ from dataclasses import asdict
 
 from backend.models import SearchLog
 from backend.storage import (
+    DATA_DIR,
     append_jsonl,
     load_jsonl
 )
 
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
 SEARCH_LOG_DIR = (
-    BASE_DIR
-    / "data"
+    DATA_DIR
     / "search_logs"
 )
 
