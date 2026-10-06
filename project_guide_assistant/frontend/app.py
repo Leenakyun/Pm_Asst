@@ -423,55 +423,6 @@ notification_count = get_unread_count(
 
 
 # =========================================================
-# 알림 팝업
-# =========================================================
-
-@st.dialog("🔔 알림", width="small")
-def show_notifications():
-    notifications = get_notifications(
-        notification_recipient_type,
-        notification_recipient_id
-    )
-
-    # 알림 창을 실제로 열면 알림 자체는 읽음 처리한다.
-    # 문의함의 새 답변 숫자는 별도 상태이므로 유지된다.
-    mark_all_notifications_read(
-        notification_recipient_type,
-        notification_recipient_id
-    )
-
-    if not notifications:
-        st.info("새로운 알림이 없습니다.")
-    else:
-        for item in notifications[:30]:
-            with st.container(border=True):
-                unread_mark = (
-                    "● "
-                    if not item.get("is_read", False)
-                    else ""
-                )
-
-                st.markdown(
-                    f"**{unread_mark}{item.get('message', '')}**"
-                )
-
-                created_at = item.get("created_at", "").replace(
-                    "T",
-                    " "
-                )
-
-                if created_at:
-                    st.caption(created_at)
-
-    if st.button(
-        "닫기",
-        width="stretch",
-        key="close_notification_dialog"
-    ):
-        st.rerun()
-
-
-# =========================================================
 # 사이드바
 # =========================================================
 
@@ -511,20 +462,93 @@ with st.sidebar:
 _top_left, _top_right = st.columns([12, 1])
 
 with _top_right:
+
     bell_label = (
         f"🔔 {notification_count}"
         if notification_count > 0
         else "🔔"
     )
 
-    if st.button(
+    with st.popover(
         bell_label,
-        key="global_notification_button",
         help="알림",
-        width="stretch"
+        use_container_width=False
     ):
-        show_notifications()
 
+        st.markdown(
+            "### 🔔 알림"
+        )
+
+        notifications = get_notifications(
+            notification_recipient_type,
+            notification_recipient_id
+        )
+
+        # ---------------------------------------------
+        # 알림을 열었을 때 읽음 처리
+        # ---------------------------------------------
+
+        if notification_count > 0:
+
+            mark_all_notifications_read(
+                notification_recipient_type,
+                notification_recipient_id
+            )
+
+        # ---------------------------------------------
+        # 알림 없음
+        # ---------------------------------------------
+
+        if not notifications:
+
+            st.caption(
+                "새로운 알림이 없습니다."
+            )
+
+        # ---------------------------------------------
+        # 알림 목록
+        # ---------------------------------------------
+
+        else:
+
+            for item in notifications[:10]:
+
+                unread_mark = (
+                    "● "
+                    if not item.get(
+                        "is_read",
+                        False
+                    )
+                    else ""
+                )
+
+                st.markdown(
+                    f"**{unread_mark}"
+                    f"{item.get('message', '')}**"
+                )
+
+                created_at = (
+                    item.get(
+                        "created_at",
+                        ""
+                    )
+                )
+
+                if created_at:
+
+                    created_at = (
+                        created_at
+                        .replace(
+                            "T",
+                            " "
+                        )
+                    )
+
+                    st.caption(
+                        created_at
+                    )
+
+                st.divider()
 
 # =========================================================
 # Navigation 숫자 계산
