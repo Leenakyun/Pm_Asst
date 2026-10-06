@@ -2,6 +2,13 @@ import json
 import os
 from pathlib import Path
 
+from backend.database_service import (
+    database_enabled,
+    append_collection,
+    load_collection,
+    overwrite_collection,
+)
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,100 +26,86 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def ensure_directory(path: Path):
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def _collection_name(file_path: Path) -> str:
     """
-    폴더가 없으면 자동 생성
+    기존 JSONL 경로를 PostgreSQL collection 이름으로 변환한다.
+
+    예:
+    /app/data/faqs/faqs.jsonl -> faqs/faqs.jsonl
     """
-    path.mkdir(
-        parents=True,
-        exist_ok=True
-    )
+    path = Path(file_path).resolve()
+
+    try:
+        relative = path.relative_to(DATA_DIR)
+        return relative.as_posix()
+    except ValueError:
+        return path.as_posix()
 
 
-def append_jsonl(
-    file_path: Path,
-    data: dict
-):
+def append_jsonl(file_path: Path, data: dict):
     """
-    JSONL 파일에 데이터 1건 추가
+    DATABASE_URL이 있으면 PostgreSQL JSONB 저장소를 사용하고,
+    로컬 개발처럼 DATABASE_URL이 없으면 기존 JSONL 파일을 사용한다.
     """
+    if database_enabled():
+        append_collection(
+            _collection_name(file_path),
+            data,
+        )
+        return
 
-    ensure_directory(
-        file_path.parent
-    )
+    ensure_directory(file_path.parent)
 
-    with file_path.open(
-        "a",
-        encoding="utf-8"
-    ) as file:
-
+    with file_path.open("a", encoding="utf-8") as file:
         file.write(
-            json.dumps(
-                data,
-                ensure_ascii=False
-            )
+            json.dumps(data, ensure_ascii=False)
             + "\n"
         )
 
 
-def load_jsonl(
-    file_path: Path
-):
-    """
-    JSONL 파일 전체 읽기
-    """
+def load_jsonl(file_path: Path):
+    if database_enabled():
+        return load_collection(
+            _collection_name(file_path)
+        )
 
     if not file_path.exists():
         return []
 
     rows = []
 
-    with file_path.open(
-        "r",
-        encoding="utf-8"
-    ) as file:
-
+    with file_path.open("r", encoding="utf-8") as file:
         for line in file:
-
             line = line.strip()
 
             if not line:
                 continue
 
             try:
-                rows.append(
-                    json.loads(line)
-                )
-
+                rows.append(json.loads(line))
             except json.JSONDecodeError:
                 continue
 
     return rows
 
 
-def overwrite_jsonl(
-    file_path: Path,
-    rows: list
-):
-    """
-    JSONL 파일 전체 덮어쓰기
-    """
+def overwrite_jsonl(file_path: Path, rows: list):
+    if database_enabled():
+        overwrite_collection(
+            _collection_name(file_path),
+            rows,
+        )
+        return
 
-    ensure_directory(
-        file_path.parent
-    )
+    ensure_directory(file_path.parent)
 
-    with file_path.open(
-        "w",
-        encoding="utf-8"
-    ) as file:
-
+    with file_path.open("w", encoding="utf-8") as file:
         for row in rows:
-
             file.write(
-                json.dumps(
-                    row,
-                    ensure_ascii=False
-                )
+                json.dumps(row, ensure_ascii=False)
                 + "\n"
             )
 
@@ -120,38 +113,21 @@ def overwrite_jsonl(
 def save_binary_file(
     file_bytes: bytes,
     directory: Path,
-    file_name: str
+    file_name: str,
 ):
     """
-    이미지 등 바이너리 파일 저장
+    PDF/DOCX/TXT/이미지는 DB가 아니라 Railway Volume에 저장한다.
     """
+    ensure_directory(directory)
 
-    ensure_directory(
-        directory
-    )
-
-    save_path = (
-        directory
-        / file_name
-    )
-
-    save_path.write_bytes(
-        file_bytes
-    )
+    save_path = directory / file_name
+    save_path.write_bytes(file_bytes)
 
     return str(save_path)
 
 
-def file_exists(
-    file_path
-):
-    """
-    저장된 파일 존재 여부 확인
-    """
-
+def file_exists(file_path):
     if not file_path:
         return False
 
-    return Path(
-        file_path
-    ).exists()
+    return Path(file_path).exists()

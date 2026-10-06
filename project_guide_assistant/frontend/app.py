@@ -1,6 +1,8 @@
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
+import extra_streamlit_components as stx
 import streamlit as st
 
 
@@ -30,6 +32,10 @@ from backend.notification_service import (
     get_unread_count,
     mark_all_notifications_read,
 )
+from backend.session_service import (
+    create_session_token,
+    verify_session_token,
+)
 
 
 # =========================================================
@@ -40,6 +46,18 @@ st.set_page_config(
     page_title="프로젝트 가이드 도우미",
     page_icon="🔎",
     layout="wide"
+)
+
+
+# =========================================================
+# 브라우저 로그인 쿠키
+# =========================================================
+
+COOKIE_NAME = "pm_asst_session"
+COOKIE_EXPIRES_DAYS = 7
+
+cookie_manager = stx.CookieManager(
+    key="pm_asst_cookie_manager"
 )
 
 
@@ -66,6 +84,55 @@ SESSION_DEFAULTS = {
 for key, value in SESSION_DEFAULTS.items():
     if key not in st.session_state:
         st.session_state[key] = value
+
+
+# =========================================================
+# 쿠키에서 로그인 복구
+# =========================================================
+
+def restore_login_from_cookie():
+    if st.session_state.get("logged_in"):
+        return
+
+    token = cookie_manager.get(COOKIE_NAME)
+
+    if not token:
+        return
+
+    payload = verify_session_token(token)
+
+    if not payload:
+        # 만료/위조 토큰은 다음 정상 렌더링 때 삭제한다.
+        try:
+            cookie_manager.delete(COOKIE_NAME)
+        except Exception:
+            pass
+        return
+
+    role = payload.get("role")
+    user_id = (payload.get("user_id") or "").strip()
+
+    if role == "worker":
+        success, _ = validate_worker_email(user_id)
+        if not success:
+            return
+
+        normalized_email = user_id.lower()
+        profile = get_or_create_profile(normalized_email)
+
+        st.session_state["logged_in"] = True
+        st.session_state["role"] = "worker"
+        st.session_state["worker_id"] = normalized_email
+        st.session_state["worker_email"] = normalized_email
+        st.session_state["worker_name"] = profile.get("name", "")
+
+    elif role == "admin":
+        st.session_state["logged_in"] = True
+        st.session_state["role"] = "admin"
+        st.session_state["admin_id"] = user_id
+
+
+restore_login_from_cookie()
 
 
 # =========================================================
@@ -104,6 +171,11 @@ def logout():
     for key in keys_to_remove:
         if key in st.session_state:
             del st.session_state[key]
+
+    try:
+        cookie_manager.delete(COOKIE_NAME)
+    except Exception:
+        pass
 
     st.rerun()
 
@@ -161,6 +233,19 @@ def show_login():
                         ""
                     )
 
+                    token = create_session_token(
+                        role="worker",
+                        user_id=normalized_email,
+                    )
+                    cookie_manager.set(
+                        COOKIE_NAME,
+                        token,
+                        expires_at=(
+                            datetime.now()
+                            + timedelta(days=COOKIE_EXPIRES_DAYS)
+                        ),
+                    )
+
                     st.rerun()
 
     else:
@@ -185,6 +270,20 @@ def show_login():
                     st.session_state["logged_in"] = True
                     st.session_state["role"] = "admin"
                     st.session_state["admin_id"] = admin_id.strip()
+
+                    token = create_session_token(
+                        role="admin",
+                        user_id=admin_id.strip(),
+                    )
+                    cookie_manager.set(
+                        COOKIE_NAME,
+                        token,
+                        expires_at=(
+                            datetime.now()
+                            + timedelta(days=COOKIE_EXPIRES_DAYS)
+                        ),
+                    )
+
                     st.rerun()
                 else:
                     st.error(
